@@ -37,7 +37,9 @@ let lives = 3;
 
 function cleanScreen()
 {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    //ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgb(30 30 30 / 25%)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
 function createGameObjects(x, y) {
@@ -80,16 +82,6 @@ function drawPaddle()
     ctx.closePath();
 }
 
-
-function drawBall(ball)
-{
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fillStyle = ball.color;
-    ctx.fill();
-    ctx.closePath();
-}
-
 function drawBricks() {
     let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height / 2);
     for (let c = 0; c < brickColumnCount; c++) {
@@ -97,7 +89,6 @@ function drawBricks() {
         if (bricks[c][r].status === 1) {
             const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
             const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
-           
 
             // Add two color stops
             gradient.addColorStop(0, "#04529a");
@@ -122,26 +113,24 @@ function draw()
         cleanScreen();
         drawScore();
         drawLives();
-        //drawBall(ball);
         ball.draw(ctx)
         drawPaddle();
         drawBricks();
         collisionDetection();
         //determino si toca los bordes del canvas
-        let ballRadiusAjust = ball.radius - 2;    
-        if (ball.x + dx > canvas.width - ballRadiusAjust || ball.x + dx < ballRadiusAjust) {
+        if (ball.x + dx > canvas.width - ball.radius || ball.x + dx < ball.radius) {
             dx = -dx;
         }
 
         if (ball.y + dy < ball.radius) {
             dy = -dy;
-        } else if (ball.y + dy > canvas.height - ballRadiusAjust) {
+        } else if (ball.y + dy > canvas.height - ball.radius) {
             if (ball.x > paddleX && x < paddleX + paddleWidth) {
-            dy = -dy;
+                dy = -dy;
             } else {
                 lives--;
                 if (!lives) {
-                    lose_audio.play();
+                    lose_audio.play().then(r => console.log('player lose the game!'));
                     alert("GAME OVER");
                     playing = false;
                 } else {
