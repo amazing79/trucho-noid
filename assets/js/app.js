@@ -1,14 +1,18 @@
+import {Ball} from './objects/ball.js';
+import {Point} from './objects/point.js';
+
 const canvas = document.getElementById("panel");
 const ctx = canvas.getContext("2d");
 const lose_audio = new Audio("assets/sounds/ERROR.WAV");
 const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
+let ball;
+
 
 let x = canvas.width / 2;
 let y = canvas.height - 30;
-let ballRadius = 10;
+//let ballRadius = 10;
 let dx = 2;
 let dy = -2;
-let interval = 0;
 let playing = false;
 // paddle configuration
 const paddleHeight = 10;
@@ -34,6 +38,15 @@ let lives = 3;
 function cleanScreen()
 {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function createGameObjects(x, y) {
+  ball = createBallObject(x,y);
+}
+
+function createBallObject(x, y){
+  let point = new Point(x,y);
+  return new Ball(point, 10,"#0095DD" );
 }
 
 function drawScore() 
@@ -67,14 +80,14 @@ function drawPaddle()
     ctx.closePath();
 }
 
-function drawBall()
+
+function drawBall(ball)
 {
     ctx.beginPath();
-    ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "#0095DD";
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = ball.color;
     ctx.fill();
     ctx.closePath();
-
 }
 
 function drawBricks() {
@@ -109,20 +122,21 @@ function draw()
         cleanScreen();
         drawScore();
         drawLives();
-        drawBall();
+        //drawBall(ball);
+        ball.draw(ctx)
         drawPaddle();
         drawBricks();
         collisionDetection();
         //determino si toca los bordes del canvas
-        let ballRadiusAjust = ballRadius - 2;    
-        if (x + dx > canvas.width - ballRadiusAjust || x + dx < ballRadiusAjust) {
+        let ballRadiusAjust = ball.radius - 2;    
+        if (ball.x + dx > canvas.width - ballRadiusAjust || ball.x + dx < ballRadiusAjust) {
             dx = -dx;
         }
 
-        if (y + dy < ballRadius) {
+        if (ball.y + dy < ball.radius) {
             dy = -dy;
-        } else if (y + dy > canvas.height - ballRadiusAjust) {
-            if (x > paddleX && x < paddleX + paddleWidth) {
+        } else if (ball.y + dy > canvas.height - ballRadiusAjust) {
+            if (ball.x > paddleX && x < paddleX + paddleWidth) {
             dy = -dy;
             } else {
                 lives--;
@@ -131,8 +145,8 @@ function draw()
                     alert("GAME OVER");
                     playing = false;
                 } else {
-                    x = canvas.width / 2;
-                    y = canvas.height - 30;
+                    ball.x = canvas.width / 2;
+                    ball.y = canvas.height - 30;
                     dx = 2;
                     dy = -2;
                     paddleX = (canvas.width - paddleWidth) / 2;
@@ -145,8 +159,11 @@ function draw()
         } else if (leftPressed) {
             paddleX = Math.max(paddleX - 7, 0);
         }
-        x += dx;
-        y += dy;
+       //x += dx;
+        //y += dy;
+        ball.x += dx;
+        ball.y += dy;
+        
         if(playing) {
             window.requestAnimationFrame(draw);
         }
@@ -209,10 +226,10 @@ function collisionDetection()
         const b = bricks[c][r];
         if (b.status === 1) {
           if (
-            x > b.x &&
-            x < b.x + brickWidth &&
-            y > b.y &&
-            y < b.y + brickHeight
+            ball.x > b.x &&
+            ball.x < b.x + brickWidth &&
+            ball.y > b.y &&
+            ball.y < b.y + brickHeight
           ) {
             dy = -dy;
             b.status = 0;
@@ -231,11 +248,12 @@ function onLoad()
 {
    let btn = document.getElementById("runButton");
    btn.addEventListener("click", startGame);
-    document.addEventListener("keydown", keyDownHandler, false);
-    document.addEventListener("keyup", keyUpHandler, false);
-    //soporte para mouse
-    document.addEventListener("mousemove", mouseMoveHandler, false);
-    initializeBricks();   
+   document.addEventListener("keydown", keyDownHandler, false);
+   document.addEventListener("keyup", keyUpHandler, false);
+   //soporte para mouse
+   document.addEventListener("mousemove", mouseMoveHandler, false);
+   initializeBricks();
+   createGameObjects(x, y);   
 }
 
 window.onLoad = onLoad();
