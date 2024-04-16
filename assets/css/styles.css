@@ -1,0 +1,34 @@
+* {
+    padding: 0;
+    margin: 0;
+}
+  
+canvas {
+    background: #323212;
+    border: solid 4px #fafafa;
+    border-radius: 10px;
+    display: block;
+    margin: 20px auto;
+  }
+
+  body{
+    background-image: url('../img/bg.jpg');
+    background-repeat:  no-repeat;
+    background-size: cover;
+  }
+
+button {
+    display: block;
+    margin: 0 auto;
+    padding: 10px;
+    font-weight: bold;
+    min-width: 100px;
+    color: aliceblue;
+    background-color: #3b88aa;
+    border: none;
+    border-radius: 8px;
+  }
+
+  audio{
+    display: none;
+  }
