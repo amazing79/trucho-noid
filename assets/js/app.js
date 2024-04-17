@@ -1,12 +1,17 @@
 import {Ball} from './objects/ball.js';
 import {Point} from './objects/point.js';
+import {PaddleBall} from './objects/paddle.js';
+import {Actions as actions, Actions} from './common/actions.js';
 
 const canvas = document.getElementById("panel");
 const ctx = canvas.getContext("2d");
 const lose_audio = new Audio("assets/sounds/ERROR.WAV");
 const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
+//game objects
 let ball;
-
+let paddle;
+let raf;
+let status = Actions.GAME_OVER;
 
 let x = canvas.width / 2;
 let y = canvas.height - 30;
@@ -14,10 +19,7 @@ let y = canvas.height - 30;
 let dx = 2;
 let dy = -2;
 let playing = false;
-// paddle configuration
-const paddleHeight = 10;
-const paddleWidth = 75;
-let paddleX = (canvas.width - paddleWidth) / 2;
+
 let rightPressed = false;
 let leftPressed = false;
 // bricks configuration
@@ -44,11 +46,20 @@ function cleanScreen()
 
 function createGameObjects(x, y) {
   ball = createBallObject(x,y);
+  paddle = createPaddleObject(x,y);
+  paddle.x = (canvas.width - paddle.width) / 2 ;
+  paddle.y =  canvas.height - (paddle.height + 2)
 }
 
 function createBallObject(x, y){
   let point = new Point(x,y);
   return new Ball(point, 10,"#0095DD" );
+}
+
+function createPaddleObject(x,y)
+{
+    let point = new Point(x,y);
+    return new PaddleBall(point, 75, 10, "#45Fd4E");
 }
 
 function drawScore() 
@@ -68,18 +79,10 @@ function drawLives()
 function checkWinGame()
 {
     if (score === brickRowCount * brickColumnCount) {
-        win_audio.play();
+        status = actions.GAME_OVER;
+        win_audio.play().then(r => { console.log('Player win the game!!')});
         alert("YOU WIN, CONGRATULATIONS!");
     }
-}
-
-function drawPaddle() 
-{
-    ctx.beginPath();
-    ctx.rect(paddleX, canvas.height - (paddleHeight + 2), paddleWidth, paddleHeight);
-    ctx.fillStyle = "#45Fd4E";
-    ctx.fill();
-    ctx.closePath();
 }
 
 function drawBricks() {
@@ -109,12 +112,12 @@ function drawBricks() {
 
 function draw() 
 {
-    if (playing) {
+    if (status === Actions.PLAYING) {
         cleanScreen();
         drawScore();
         drawLives();
         ball.draw(ctx)
-        drawPaddle();
+        paddle.draw(ctx)
         drawBricks();
         collisionDetection();
         //determino si toca los bordes del canvas
@@ -125,37 +128,33 @@ function draw()
         if (ball.y + dy < ball.radius) {
             dy = -dy;
         } else if (ball.y + dy > canvas.height - ball.radius) {
-            if (ball.x > paddleX && x < paddleX + paddleWidth) {
+            if (paddle.collision(ball)) {
                 dy = -dy;
             } else {
                 lives--;
                 if (!lives) {
                     lose_audio.play().then(r => console.log('player lose the game!'));
+
                     alert("GAME OVER");
-                    playing = false;
+                    status = Actions.GAME_OVER;
                 } else {
                     ball.x = canvas.width / 2;
                     ball.y = canvas.height - 30;
                     dx = 2;
                     dy = -2;
-                    paddleX = (canvas.width - paddleWidth) / 2;
+                    paddle.x = (canvas.width - paddle.width) / 2;
                 }
             }
         }
 
         if (rightPressed) {
-            paddleX = Math.min(paddleX + 7, canvas.width - paddleWidth);
+            paddle.x = Math.min(paddle.x + 7, canvas.width - paddle.width);
         } else if (leftPressed) {
-            paddleX = Math.max(paddleX - 7, 0);
+            paddle.x = Math.max(paddle.x - 7, 0);
         }
-       //x += dx;
-        //y += dy;
         ball.x += dx;
         ball.y += dy;
-        
-        if(playing) {
-            window.requestAnimationFrame(draw);
-        }
+        raf = window.requestAnimationFrame(draw);
     }
 }
 
@@ -181,20 +180,21 @@ function mouseMoveHandler(e)
 {
     const relativeX = e.clientX - canvas.offsetLeft;
     if (relativeX > 0 && relativeX < canvas.width) {
-      paddleX = relativeX - paddleWidth / 2;
+      paddle.x = relativeX - paddle.width / 2;
     }
 }
 
 function startGame(evt)
 {
-   playing = !playing
-   if(playing) {
+   if(status === Actions.GAME_OVER || status === Actions.PAUSED) {
+        status = Actions.PLAYING;
         draw();
         evt.target.innerText = "Restart";
-   } else {
-        cleanScreen();
-        console.log("debe reiniciar")
-        window.document.location.reload();
+   } else if (status === Actions.PAUSED || status === Actions.PLAYING) {
+       status = Actions.GAME_OVER;
+       cancelAnimationFrame(raf);
+       cleanScreen();
+       window.document.location.reload();
    }
 }
 
@@ -223,7 +223,7 @@ function collisionDetection()
             dy = -dy;
             b.status = 0;
             score++;
-            if(score % 5 == 0) {
+            if(score % 5 === 0) {
                 draw();
             }
             checkWinGame();
