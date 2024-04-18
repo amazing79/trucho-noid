@@ -1,6 +1,7 @@
 import {Ball} from './objects/ball.js';
 import {Point} from './objects/point.js';
 import {PaddleBall} from './objects/paddle.js';
+import {Text} from './objects/text.js';
 import {Actions as actions, Actions} from './common/actions.js';
 
 const canvas = document.getElementById("panel");
@@ -10,15 +11,15 @@ const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
 //game objects
 let ball;
 let paddle;
+let scoreText;
+let livesText;
 let raf;
 let status = Actions.GAME_OVER;
 
 let x = canvas.width / 2;
 let y = canvas.height - 30;
-//let ballRadius = 10;
 let dx = 2;
 let dy = -2;
-let playing = false;
 
 let rightPressed = false;
 let leftPressed = false;
@@ -47,6 +48,8 @@ function cleanScreen()
 function createGameObjects(x, y) {
   ball = createBallObject(x,y);
   paddle = createPaddleObject(x,y);
+  scoreText = createScoreText(8,20);
+  livesText = createLivesText(canvas.width - 65,20);
   paddle.x = (canvas.width - paddle.width) / 2 ;
   paddle.y =  canvas.height - (paddle.height + 2)
 }
@@ -62,18 +65,16 @@ function createPaddleObject(x,y)
     return new PaddleBall(point, 75, 10, "#45Fd4E");
 }
 
-function drawScore() 
+function createScoreText(x,y)
 {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
-    ctx.fillText(`Score: ${score}`, 8, 20);
+    let point = new Point(x,y);
+    return new Text(point, "Score", "16px Arial", "#0095DD")
 }
 
-function drawLives() 
+function createLivesText(x,y)
 {
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
-    ctx.fillText(`Lives: ${lives}`, canvas.width - 65, 20);
+    let point = new Point(x,y);
+    return new Text(point, "lives", "16px Arial", "#0095DD")
 }
 
 function checkWinGame()
@@ -87,19 +88,16 @@ function checkWinGame()
 
 function drawBricks() {
     let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height / 2);
+    gradient.addColorStop(0, "#04529a");
+    gradient.addColorStop(.5, "#2bd6fa");
+    gradient.addColorStop(1, "#04529a");
     for (let c = 0; c < brickColumnCount; c++) {
       for (let r = 0; r < brickRowCount; r++) {
         if (bricks[c][r].status === 1) {
             const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
             const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
-
-            // Add two color stops
-            gradient.addColorStop(0, "#04529a");
-            gradient.addColorStop(.5, "#2bd6fa");
-            gradient.addColorStop(1, "#04529a");
             bricks[c][r].x = brickX;
             bricks[c][r].y = brickY;
-
             ctx.beginPath();
             //ctx.rect(brickX, brickY, brickWidth, brickHeight);
             ctx.fillStyle = gradient;
@@ -114,8 +112,8 @@ function draw()
 {
     if (status === Actions.PLAYING) {
         cleanScreen();
-        drawScore();
-        drawLives();
+        scoreText.draw(ctx, `Score: ${score}`);
+        livesText.draw(ctx, `Lives: ${lives}`);
         ball.draw(ctx)
         paddle.draw(ctx)
         drawBricks();
