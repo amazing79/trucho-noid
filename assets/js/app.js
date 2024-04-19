@@ -11,8 +11,7 @@ const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
 //game objects
 let ball;
 let paddle;
-let scoreText;
-let livesText;
+let scoreText, livesText, gameOverText, winGameText;
 let raf;
 let status = Actions.GAME_OVER;
 
@@ -25,7 +24,7 @@ let rightPressed = false;
 let leftPressed = false;
 // bricks configuration
 const brickRowCount = 3;
-const brickColumnCount = 5;
+const brickColumnCount = 6;
 const brickWidth = 75;
 const brickHeight = 20;
 const brickPadding = 10;
@@ -50,6 +49,8 @@ function createGameObjects(x, y) {
   paddle = createPaddleObject(x,y);
   scoreText = createScoreText(8,20);
   livesText = createLivesText(canvas.width - 65,20);
+  gameOverText = createGameOverText(canvas.width / 8,canvas.height / 2);
+  winGameText = createWinGameText(canvas.width / 4,canvas.height / 2);
   paddle.x = (canvas.width - paddle.width) / 2 ;
   paddle.y =  canvas.height - (paddle.height + 2)
 }
@@ -68,13 +69,25 @@ function createPaddleObject(x,y)
 function createScoreText(x,y)
 {
     let point = new Point(x,y);
-    return new Text(point, "Score", "16px Arial", "#0095DD")
+    return new Text(point, "16px Arial", "#0095DD")
 }
 
 function createLivesText(x,y)
 {
     let point = new Point(x,y);
-    return new Text(point, "lives", "16px Arial", "#0095DD")
+    return new Text(point, "16px Arial", "#0095DD")
+}
+
+function createGameOverText(x,y)
+{
+    let point = new Point(x,y);
+    return new Text(point, "40px Arial", "#FAFAFA")
+}
+
+function createWinGameText(x,y)
+{
+    let point = new Point(x,y);
+    return new Text(point, "42px Arial", "#FAFAFA")
 }
 
 function checkWinGame()
@@ -82,7 +95,8 @@ function checkWinGame()
     if (score === brickRowCount * brickColumnCount) {
         status = actions.GAME_OVER;
         win_audio.play().then(r => { console.log('Player win the game!!')});
-        alert("YOU WIN, CONGRATULATIONS!");
+        //alert("YOU WIN, CONGRATULATIONS!");
+        winGameText.drawStrokeText(ctx, "You win, Bro!")
     }
 }
 
@@ -112,8 +126,8 @@ function draw()
 {
     if (status === Actions.PLAYING) {
         cleanScreen();
-        scoreText.draw(ctx, `Score: ${score}`);
-        livesText.draw(ctx, `Lives: ${lives}`);
+        scoreText.drawText(ctx, `Score: ${score}`);
+        livesText.drawText(ctx, `Lives: ${lives}`);
         ball.draw(ctx)
         paddle.draw(ctx)
         drawBricks();
@@ -132,8 +146,7 @@ function draw()
                 lives--;
                 if (!lives) {
                     lose_audio.play().then(r => console.log('player lose the game!'));
-
-                    alert("GAME OVER");
+                    gameOverText.drawStrokeText(ctx, "GAME OVER, BRO!");
                     status = Actions.GAME_OVER;
                 } else {
                     ball.x = canvas.width / 2;

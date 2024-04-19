@@ -1,7 +1,6 @@
 export class Text {
-    constructor(aPoint, aText, aFontType, aColor){
+    constructor(aPoint,aFontType, aColor){
         this._point = aPoint;
-        this._text = aText;
         this._fontType = aFontType;
         this._color = aColor;
     }
@@ -12,10 +11,6 @@ export class Text {
 
     get y() {
         return this._point.y;
-    }
-
-    get text(){
-        return this._text;
     }
 
     get color(){
@@ -30,14 +25,16 @@ export class Text {
         this._point.y = aValue;
     }
 
-    set text(aText){
-        this._text.text = aText;
-    }
-
-    draw(ctx, aText) {
+    drawText(ctx, aText) {
         ctx.font = this._fontType;
         ctx.fillStyle = this._color;
         ctx.fillText(aText, this._point.x, this._point.y);
+    }
+
+    drawStrokeText(ctx, aText) {
+        ctx.font = this._fontType;
+        ctx.strokeStyle = this._color;
+        ctx.strokeText(aText, this._point.x, this._point.y);
     }
 
     printValues() {
