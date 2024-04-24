@@ -47,7 +47,7 @@ export class PaddleBall {
         ctx.rect(this._point.x, this._point.y , this._width, this._height);
         ctx.fillStyle = this._color;
         ctx.fill();
-        ctx.closePath();
+        //ctx.closePath();
     }
 
     collision(obj) {

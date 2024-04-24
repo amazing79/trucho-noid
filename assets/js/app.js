@@ -2,15 +2,19 @@ import {Ball} from './objects/ball.js';
 import {Point} from './objects/point.js';
 import {PaddleBall} from './objects/paddle.js';
 import {Text} from './objects/text.js';
+import {Brick} from './objects/brick.js';
 import {Actions as actions, Actions} from './common/actions.js';
-
-const canvas = document.getElementById("panel");
-const ctx = canvas.getContext("2d");
 const lose_audio = new Audio("assets/sounds/ERROR.WAV");
 const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
+let collisionEvent = new Event('collisionDetected');
+const canvas = document.getElementById("panel");
+
+let col, row = 0;
 //game objects
+let ctx;
 let ball;
 let paddle;
+let bricks = [];
 let scoreText, livesText, gameOverText, winGameText;
 let raf;
 let status = Actions.GAME_OVER;
@@ -24,14 +28,12 @@ let rightPressed = false;
 let leftPressed = false;
 // bricks configuration
 const brickRowCount = 3;
-const brickColumnCount = 6;
+const brickColumnCount = 5;
 const brickWidth = 75;
 const brickHeight = 20;
 const brickPadding = 10;
 const brickOffsetTop = 30;
 const brickOffsetLeft = 30;
-//array of brick objects
-const bricks = [];
 //score configuration
 let score = 0;
 // lives configuration
@@ -51,6 +53,7 @@ function createGameObjects(x, y) {
   livesText = createLivesText(canvas.width - 65,20);
   gameOverText = createGameOverText(canvas.width / 8,canvas.height / 2);
   winGameText = createWinGameText(canvas.width / 4,canvas.height / 2);
+  bricks = createBricks(x,y);
   paddle.x = (canvas.width - paddle.width) / 2 ;
   paddle.y =  canvas.height - (paddle.height + 2)
 }
@@ -90,37 +93,46 @@ function createWinGameText(x,y)
     return new Text(point, "42px Arial", "#FAFAFA")
 }
 
+function createBricks(x,y) {
+    let bricksArray = [];
+    let point = new Point(x,y);
+    for (let c = 0; c < brickColumnCount; c++) {
+        bricksArray[c] = [];
+        for (let r = 0; r < brickRowCount; r++) {
+            bricksArray[c][r] = new Brick(point, brickWidth, brickHeight, "#04529a");
+        }
+    }
+    return bricksArray;
+}
+
 function checkWinGame()
 {
     if (score === brickRowCount * brickColumnCount) {
         status = actions.GAME_OVER;
         win_audio.play().then(r => { console.log('Player win the game!!')});
-        //alert("YOU WIN, CONGRATULATIONS!");
         winGameText.drawStrokeText(ctx, "You win, Bro!")
     }
 }
 
-function drawBricks() {
+function drawBricksObject(ctx) {
     let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height / 2);
     gradient.addColorStop(0, "#04529a");
     gradient.addColorStop(.5, "#2bd6fa");
     gradient.addColorStop(1, "#04529a");
     for (let c = 0; c < brickColumnCount; c++) {
-      for (let r = 0; r < brickRowCount; r++) {
-        if (bricks[c][r].status === 1) {
-            const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
-            const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
-            bricks[c][r].x = brickX;
-            bricks[c][r].y = brickY;
-            ctx.beginPath();
-            //ctx.rect(brickX, brickY, brickWidth, brickHeight);
-            ctx.fillStyle = gradient;
-            ctx.fillRect(brickX, brickY, brickWidth, brickHeight);
-            ctx.closePath();
+        for (let r = 0; r < brickRowCount; r++) {
+            let brick = bricks[c][r];
+            if (brick.isVisible()) {
+                const brickX = c * (brick.width + brickPadding) + brickOffsetLeft;
+                const brickY = r * (brick.height + brickPadding) + brickOffsetTop;
+                brick.x = brickX;
+                brick.y = brickY;
+                brick.color = gradient;
+                brick.draw(ctx)
+            }
         }
-      }
     }
-  }
+}
 
 function draw() 
 {
@@ -130,8 +142,8 @@ function draw()
         livesText.drawText(ctx, `Lives: ${lives}`);
         ball.draw(ctx)
         paddle.draw(ctx)
-        drawBricks();
-        collisionDetection();
+        drawBricksObject(ctx);
+        checkBricksCollisionDetection(ball)
         //determino si toca los bordes del canvas
         if (ball.x + dx > canvas.width - ball.radius || ball.x + dx < ball.radius) {
             dx = -dx;
@@ -209,50 +221,58 @@ function startGame(evt)
    }
 }
 
-function initializeBricks()
+function checkBricksCollisionDetection(ball)
 {
-    for (let c = 0; c < brickColumnCount; c++) {
-        bricks[c] = [];
-        for (let r = 0; r < brickRowCount; r++) {
-            bricks[c][r] = { x: 0, y: 0, status: 1 };
+    let hasCollision = false;
+    let c = 0, r = 0;
+    while (c < brickColumnCount && !hasCollision) {
+        while (r < brickRowCount && !hasCollision) {
+            let brick = bricks[c][r];
+            if (brick.isVisible()) {
+                if(brick.collision(ball)) {
+                    hasCollision = true;
+                    col = c;
+                    row = r;
+                }
+            }
+            if(!hasCollision) {
+                r++;
+            }
         }
-      }
+        if(!hasCollision) {
+            c++;
+        }
+    }
+
+    if(hasCollision) {
+        canvas.dispatchEvent(collisionEvent)
+    }
 }
 
-function collisionDetection() 
+function removeBrick()
 {
-    for (let c = 0; c < brickColumnCount; c++) {
-      for (let r = 0; r < brickRowCount; r++) {
-        const b = bricks[c][r];
-        if (b.status === 1) {
-          if (
-            ball.x > b.x &&
-            ball.x < b.x + brickWidth &&
-            ball.y > b.y &&
-            ball.y < b.y + brickHeight
-          ) {
-            dy = -dy;
-            b.status = 0;
-            score++;
-            if(score % 5 === 0) {
-                draw();
-            }
-            checkWinGame();
-          }
-        }
-      }
+    let brickHit = bricks[col][row];
+    dy = -dy;
+    brickHit.status = 0;
+    score++;
+    if(score % 5 === 0) {
+        draw();
     }
+    checkWinGame();
 }
 
 function onLoad() 
 {
+   ctx = canvas.getContext("2d");
+   canvas.addEventListener("collisionDetected", removeBrick, false);
    let btn = document.getElementById("runButton");
+
    btn.addEventListener("click", startGame);
    document.addEventListener("keydown", keyDownHandler, false);
    document.addEventListener("keyup", keyUpHandler, false);
    //soporte para mouse
    document.addEventListener("mousemove", mouseMoveHandler, false);
-   initializeBricks();
+   //initializeBricks();
    createGameObjects(x, y);   
 }
 

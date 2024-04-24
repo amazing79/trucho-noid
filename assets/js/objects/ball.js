@@ -34,7 +34,7 @@ export class Ball {
         ctx.arc(this._point.x, this._point.y, this._radius, 0, Math.PI * 2);
         ctx.fillStyle = this._color;
         ctx.fill();
-        ctx.closePath(); 
+       // ctx.closePath();
     }     
 
     printValues() {
