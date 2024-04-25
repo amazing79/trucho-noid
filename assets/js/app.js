@@ -94,12 +94,12 @@ function createWinGameText(x,y)
 }
 
 function createBricks(x,y) {
-    let bricksArray = [];
-    let point = new Point(x,y);
+    let bricksArray = new Map();
     for (let c = 0; c < brickColumnCount; c++) {
-        bricksArray[c] = [];
         for (let r = 0; r < brickRowCount; r++) {
-            bricksArray[c][r] = new Brick(point, brickWidth, brickHeight, "#04529a");
+            let point = new Point(0,0);
+            let brick = new Brick(point, brickWidth, brickHeight, "#04529a", r, c);
+            bricksArray.set(brick.id, brick);
         }
     }
     return bricksArray;
@@ -119,19 +119,15 @@ function drawBricksObject(ctx) {
     gradient.addColorStop(0, "#04529a");
     gradient.addColorStop(.5, "#2bd6fa");
     gradient.addColorStop(1, "#04529a");
-    for (let c = 0; c < brickColumnCount; c++) {
-        for (let r = 0; r < brickRowCount; r++) {
-            let brick = bricks[c][r];
-            if (brick.isVisible()) {
-                const brickX = c * (brick.width + brickPadding) + brickOffsetLeft;
-                const brickY = r * (brick.height + brickPadding) + brickOffsetTop;
-                brick.x = brickX;
-                brick.y = brickY;
-                brick.color = gradient;
-                brick.draw(ctx)
-            }
-        }
-    }
+
+    bricks.forEach( (brick) => {
+        const brickX = brick.col * (brick.width + brickPadding) + brickOffsetLeft;
+        const brickY = brick.row * (brick.height + brickPadding) + brickOffsetTop;
+        brick.x = brickX;
+        brick.y = brickY;
+        brick.color = gradient;
+        brick.draw(ctx)
+    })
 }
 
 function draw() 
@@ -223,40 +219,19 @@ function startGame(evt)
 
 function checkBricksCollisionDetection(ball)
 {
-    let hasCollision = false;
-    let c = 0, r = 0;
-    while (c < brickColumnCount && !hasCollision) {
-        while (r < brickRowCount && !hasCollision) {
-            let brick = bricks[c][r];
-            if (brick.isVisible()) {
-                if(brick.collision(ball)) {
-                    hasCollision = true;
-                    col = c;
-                    row = r;
-                }
-            }
-            if(!hasCollision) {
-                r++;
-            }
-        }
-        if(!hasCollision) {
-            c++;
-        }
-    }
-
-    if(hasCollision) {
-        canvas.dispatchEvent(collisionEvent)
-    }
+    bricks.forEach(brick => {
+        brick.collision(ball);
+    })
 }
 
-function removeBrick()
+function updateGameStatus(event)
 {
-    let brickHit = bricks[col][row];
+    bricks.delete(event.detail.id);
     dy = -dy;
-    brickHit.status = 0;
     score++;
     if(score % 5 === 0) {
-        draw();
+        dy = dy * 1.5;
+        dx = dx * 1.5;
     }
     checkWinGame();
 }
@@ -264,7 +239,7 @@ function removeBrick()
 function onLoad() 
 {
    ctx = canvas.getContext("2d");
-   canvas.addEventListener("collisionDetected", removeBrick, false);
+   canvas.addEventListener("collisionDetected", e => updateGameStatus(e));
    let btn = document.getElementById("runButton");
 
    btn.addEventListener("click", startGame);

@@ -1,10 +1,17 @@
 export class Brick {
-    constructor(aPoint, width,height, aColor){
+    constructor(aPoint, width,height, aColor, row, col){
+        this._id = `key-${row}-${col}`;
         this._point = aPoint;
         this._width = width;
         this._height = height;
         this._color = aColor;
         this._status = 1;
+        this._row = row;
+        this._col = col;
+    }
+
+    get id(){
+        return this._id;
     }
 
     get x () {
@@ -23,12 +30,16 @@ export class Brick {
         return this._height;
     }
 
-    get status(){
-        return this._status;
-    }
-
     get color(){
         return this._color;
+    }
+
+    get row() {
+        return this._row;
+    }
+
+    get col() {
+        return this._col;
     }
 
     set x(aValue){
@@ -84,7 +95,13 @@ export class Brick {
             py = this.y + this.height;
         }
         let distancia = Math.sqrt( (cx - px)*(cx - px) + (cy - py)*(cy - py) );
-        return distancia < ball.radius
+        if (distancia < ball.radius)
+        {
+            this._status = 0;
+            const event = new CustomEvent('collisionDetected', {detail: {id: this._id}});
+            const canvas = document.getElementById('panel');
+            canvas.dispatchEvent(event);
+        }
     }
 
     printValues() {
