@@ -6,10 +6,8 @@ import {Brick} from './objects/brick.js';
 import {Actions as actions, Actions} from './common/actions.js';
 const lose_audio = new Audio("assets/sounds/ERROR.WAV");
 const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
-let collisionEvent = new Event('collisionDetected');
 const canvas = document.getElementById("panel");
 
-let col, row = 0;
 //game objects
 let ctx;
 let ball;
@@ -97,7 +95,9 @@ function createBricks(x,y) {
     let bricksArray = new Map();
     for (let c = 0; c < brickColumnCount; c++) {
         for (let r = 0; r < brickRowCount; r++) {
-            let point = new Point(0,0);
+            const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
+            const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
+            let point = new Point(brickX,brickY);
             let brick = new Brick(point, brickWidth, brickHeight, "#04529a", r, c);
             bricksArray.set(brick.id, brick);
         }
@@ -121,10 +121,6 @@ function drawBricksObject(ctx) {
     gradient.addColorStop(1, "#04529a");
 
     bricks.forEach( (brick) => {
-        const brickX = brick.col * (brick.width + brickPadding) + brickOffsetLeft;
-        const brickY = brick.row * (brick.height + brickPadding) + brickOffsetTop;
-        brick.x = brickX;
-        brick.y = brickY;
         brick.color = gradient;
         brick.draw(ctx)
     })
@@ -247,9 +243,7 @@ function onLoad()
    document.addEventListener("keyup", keyUpHandler, false);
    //soporte para mouse
    document.addEventListener("mousemove", mouseMoveHandler, false);
-   //initializeBricks();
    createGameObjects(x, y);   
 }
 
 window.onLoad = onLoad();
-  

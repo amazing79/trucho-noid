@@ -5,7 +5,6 @@ export class Brick {
         this._width = width;
         this._height = height;
         this._color = aColor;
-        this._status = 1;
         this._row = row;
         this._col = col;
     }
@@ -62,19 +61,10 @@ export class Brick {
         this._color = aValue;
     }
 
-    set status(aValue){
-        this._status = aValue;
-    }
-
-    isVisible(){
-        return this._status === 1;
-    }
-
     draw(ctx) {
         ctx.beginPath();
         ctx.fillStyle = this.color;
         ctx.fillRect(this._point.x, this._point.y, this.width, this.height);
-        //ctx.closePath();
     }
 
     collision(ball) {
