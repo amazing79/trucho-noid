@@ -3,7 +3,7 @@ import {Point} from './objects/point.js';
 import {PaddleBall} from './objects/paddle.js';
 import {Text} from './objects/text.js';
 import {Brick} from './objects/brick.js';
-import {Actions as actions, Actions} from './common/actions.js';
+import {Actions} from './common/actions.js';
 const lose_audio = new Audio("assets/sounds/ERROR.WAV");
 const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
 const canvas = document.getElementById("panel");
@@ -32,9 +32,8 @@ const brickHeight = 20;
 const brickPadding = 10;
 const brickOffsetTop = 30;
 const brickOffsetLeft = 30;
-//score configuration
+//score configuration y lives configuration
 let score = 0;
-// lives configuration
 let lives = 3;
 
 function cleanScreen()
@@ -44,7 +43,8 @@ function cleanScreen()
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function createGameObjects(x, y) {
+function createGameObjects(x, y)
+{
   ball = createBallObject(x,y);
   paddle = createPaddleObject(x,y);
   scoreText = createScoreText(8,20);
@@ -56,7 +56,8 @@ function createGameObjects(x, y) {
   paddle.y =  canvas.height - (paddle.height + 2)
 }
 
-function createBallObject(x, y){
+function createBallObject(x, y)
+{
   let point = new Point(x,y);
   return new Ball(point, 10,"#0095DD" );
 }
@@ -91,14 +92,15 @@ function createWinGameText(x,y)
     return new Text(point, "42px Arial", "#FAFAFA")
 }
 
-function createBricks(x,y) {
+function createBricks(x,y)
+{
     let bricksArray = new Map();
     for (let c = 0; c < brickColumnCount; c++) {
         for (let r = 0; r < brickRowCount; r++) {
             const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
             const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
             let point = new Point(brickX,brickY);
-            let brick = new Brick(point, brickWidth, brickHeight, "#04529a", r, c);
+            let brick = new Brick(point, brickWidth, brickHeight, "#04529a");
             bricksArray.set(brick.id, brick);
         }
     }
@@ -108,17 +110,20 @@ function createBricks(x,y) {
 function checkWinGame()
 {
     if (score === brickRowCount * brickColumnCount) {
-        status = actions.GAME_OVER;
+        status = Actions.GAME_OVER;
         win_audio.play().then(r => { console.log('Player win the game!!')});
         winGameText.drawStrokeText(ctx, "You win, Bro!")
     }
 }
 
-function drawBricksObject(ctx) {
+function drawBricksObject(ctx)
+{
     let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height / 2);
-    gradient.addColorStop(0, "#04529a");
-    gradient.addColorStop(.5, "#2bd6fa");
-    gradient.addColorStop(1, "#04529a");
+    gradient.addColorStop(0, "#bdd4c3");
+    gradient.addColorStop(.25, "#233d4a");
+    gradient.addColorStop(.5, "#3bffec");
+    gradient.addColorStop(.75, "#1e3946");
+    gradient.addColorStop(1, "#a8e2ff");
 
     bricks.forEach( (brick) => {
         brick.color = gradient;

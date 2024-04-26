@@ -1,12 +1,10 @@
 export class Brick {
-    constructor(aPoint, width,height, aColor, row, col){
-        this._id = `key-${row}-${col}`;
+    constructor(aPoint, width,height, aColor){
+        this._id = `key-${aPoint.x}-${aPoint.y}`;
         this._point = aPoint;
         this._width = width;
         this._height = height;
         this._color = aColor;
-        this._row = row;
-        this._col = col;
     }
 
     get id(){
@@ -31,14 +29,6 @@ export class Brick {
 
     get color(){
         return this._color;
-    }
-
-    get row() {
-        return this._row;
-    }
-
-    get col() {
-        return this._col;
     }
 
     set x(aValue){
