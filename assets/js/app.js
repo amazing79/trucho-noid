@@ -15,7 +15,7 @@ let paddle;
 let bricks = [];
 let scoreText, livesText, gameOverText, winGameText;
 let raf;
-let status = Actions.GAME_OVER;
+let status = Actions.PAUSED;
 
 let x = canvas.width / 2;
 let y = canvas.height - 30;
@@ -130,8 +130,6 @@ function draw()
 {
     if (status === Actions.PLAYING) {
         cleanScreen();
-        scoreText.drawText(ctx, `Score: ${score}`);
-        livesText.drawText(ctx, `Lives: ${lives}`);
         ball.draw(ctx)
         paddle.draw(ctx)
         drawBricksObject(ctx);
@@ -169,6 +167,8 @@ function draw()
         }
         ball.x += dx;
         ball.y += dy;
+        scoreText.drawText(ctx, `Score: ${score}`);
+        livesText.drawText(ctx, `Lives: ${lives}`);
         raf = window.requestAnimationFrame(draw);
     }
 }
@@ -201,12 +201,12 @@ function mouseMoveHandler(e)
 
 function startGame(evt)
 {
-   if(status === Actions.GAME_OVER || status === Actions.PAUSED) {
+   if(status === Actions.PAUSED) {
         status = Actions.PLAYING;
         draw();
         evt.target.innerText = "Restart";
-   } else if (status === Actions.PAUSED || status === Actions.PLAYING) {
-       status = Actions.GAME_OVER;
+   } else if  (status === Actions.GAME_OVER) {
+       status = Actions.PAUSED;
        cancelAnimationFrame(raf);
        cleanScreen();
        window.document.location.reload();
