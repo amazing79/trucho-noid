@@ -23,11 +23,6 @@ let leftPressed = false;
 // bricks configuration
 const brickRowCount = 3;
 const brickColumnCount = 5;
-const brickWidth = 75;
-const brickHeight = 20;
-const brickPadding = 10;
-const brickOffsetTop = 30;
-const brickOffsetLeft = 30;
 //score configuration y lives configuration
 let score = 0;
 let lives = 3;
@@ -47,7 +42,7 @@ function createGameObjects(x, y)
   livesText = createLivesText(world.getCanvas().width - 65,20);
   gameOverText = createGameOverText(world.getCanvas().width / 8,world.getCanvas().height / 2);
   winGameText = createWinGameText(world.getCanvas().width / 4,world.getCanvas().height / 2);
-  bricks = createBricks(x,y);
+  bricks = createBricks();
   paddle.x = (world.getCanvas().width - paddle.width) / 2 ;
   paddle.y =  world.getCanvas().height - (paddle.height + 2)
 }
@@ -88,8 +83,13 @@ function createWinGameText(x,y)
     return new Text(point, "42px Arial", "#FAFAFA")
 }
 
-function createBricks(x,y)
+function createBricks()
 {
+    const brickWidth = 75;
+    const brickHeight = 20;
+    const brickPadding = 10;
+    const brickOffsetTop = 30;
+    const brickOffsetLeft = 30;
     let bricksArray = new Map();
     for (let c = 0; c < brickColumnCount; c++) {
         for (let r = 0; r < brickRowCount; r++) {
@@ -236,7 +236,7 @@ function updateGameStatus(event)
     checkWinGame();
 }
 
-function onLoad() 
+function init()
 {
    world = new World('panel');
    ctx = world.getContext2D();
@@ -251,4 +251,4 @@ function onLoad()
    createGameObjects(world.getCanvas().width / 2, world.getCanvas().height - 30);
 }
 
-window.onLoad = onLoad();
+window.addEventListener("load", init);
