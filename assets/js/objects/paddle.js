@@ -22,10 +22,6 @@ export class PaddleBall {
         return this._height;
     }
 
-    get color(){
-        return this._color;
-    }
-
     set x(aValue){
         this._point.x = aValue;
     }

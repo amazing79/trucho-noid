@@ -112,15 +112,19 @@ function checkWinGame()
     }
 }
 
-function drawBricksObject(ctx)
-{
-    let gradient = ctx.createLinearGradient(world.getCanvas().width/2, 0, world.getCanvas().width/2, world.getCanvas().height / 4);
+function createGradient(ctx) {
+    let gradient = ctx.createLinearGradient(world.getCanvas().width / 2, 0, world.getCanvas().width / 2, world.getCanvas().height / 4);
     gradient.addColorStop(0, "#bdd4c3");
     gradient.addColorStop(.25, "#233d4a");
     gradient.addColorStop(.5, "#3bffec");
     gradient.addColorStop(.75, "#1e3946");
     gradient.addColorStop(1, "#a8e2ff");
+    return gradient;
+}
 
+function drawBricksObject(ctx)
+{
+    let gradient = createGradient(ctx);
     bricks.forEach( (brick) => {
         brick.color = gradient;
         brick.draw(ctx)
