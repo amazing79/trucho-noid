@@ -50,10 +50,6 @@ export class PaddleBall {
         //ctx.closePath();
     }
 
-    collision(obj) {
-        return obj.x > this.x && obj.x < this.x + this.width;
-    }
-
     printValues() {
         return { "x": this._point.x, "y": this._point.y, "width": this._width, "height": this._height, "color": this._color};
     }

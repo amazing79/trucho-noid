@@ -3,12 +3,13 @@ import {Point} from './objects/point.js';
 import {PaddleBall} from './objects/paddle.js';
 import {Text} from './objects/text.js';
 import {Brick} from './objects/brick.js';
+import {World} from './objects/world.js';
 import {Actions} from './common/actions.js';
 const lose_audio = new Audio("assets/sounds/ERROR.WAV");
 const win_audio = new Audio("assets/sounds/SUCCESS.WAV");
-const canvas = document.getElementById("panel");
 
 //game objects
+let world;
 let ctx;
 let ball;
 let paddle;
@@ -16,11 +17,6 @@ let bricks = [];
 let scoreText, livesText, gameOverText, winGameText;
 let raf;
 let status = Actions.PAUSED;
-
-let x = canvas.width / 2;
-let y = canvas.height - 30;
-let dx = 2;
-let dy = -2;
 
 let rightPressed = false;
 let leftPressed = false;
@@ -40,7 +36,7 @@ function cleanScreen()
 {
     //ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "rgb(30 30 30 / 25%)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, world.getCanvas().width, world.getCanvas().height);
 }
 
 function createGameObjects(x, y)
@@ -48,12 +44,12 @@ function createGameObjects(x, y)
   ball = createBallObject(x,y);
   paddle = createPaddleObject(x,y);
   scoreText = createScoreText(8,20);
-  livesText = createLivesText(canvas.width - 65,20);
-  gameOverText = createGameOverText(canvas.width / 8,canvas.height / 2);
-  winGameText = createWinGameText(canvas.width / 4,canvas.height / 2);
+  livesText = createLivesText(world.getCanvas().width - 65,20);
+  gameOverText = createGameOverText(world.getCanvas().width / 8,world.getCanvas().height / 2);
+  winGameText = createWinGameText(world.getCanvas().width / 4,world.getCanvas().height / 2);
   bricks = createBricks(x,y);
-  paddle.x = (canvas.width - paddle.width) / 2 ;
-  paddle.y =  canvas.height - (paddle.height + 2)
+  paddle.x = (world.getCanvas().width - paddle.width) / 2 ;
+  paddle.y =  world.getCanvas().height - (paddle.height + 2)
 }
 
 function createBallObject(x, y)
@@ -118,7 +114,7 @@ function checkWinGame()
 
 function drawBricksObject(ctx)
 {
-    let gradient = ctx.createLinearGradient(canvas.width/2, 0, canvas.width/2, canvas.height / 2);
+    let gradient = ctx.createLinearGradient(world.getCanvas().width/2, 0, world.getCanvas().width/2, world.getCanvas().height / 4);
     gradient.addColorStop(0, "#bdd4c3");
     gradient.addColorStop(.25, "#233d4a");
     gradient.addColorStop(.5, "#3bffec");
@@ -131,7 +127,18 @@ function drawBricksObject(ctx)
     })
 }
 
-function draw() 
+function showGameOver() {
+    lose_audio.play().then(r => console.log('player lose the game!'));
+    gameOverText.drawStrokeText(ctx, "GAME OVER, BRO!");
+    status = Actions.GAME_OVER;
+}
+
+function resetBall() {
+    ball = createBallObject(world.getCanvas().width / 2, world.getCanvas().height - 30)
+    paddle.x = (world.getCanvas().width - paddle.width) / 2;
+}
+
+function draw()
 {
     if (status === Actions.PLAYING) {
         cleanScreen();
@@ -139,41 +146,30 @@ function draw()
         paddle.draw(ctx)
         drawBricksObject(ctx);
         checkBricksCollisionDetection(ball)
-        //determino si toca los bordes del canvas
-        if (ball.x + dx > canvas.width - ball.radius || ball.x + dx < ball.radius) {
-            dx = -dx;
-        }
-
-        if (ball.y + dy < ball.radius) {
-            dy = -dy;
-        } else if (ball.y + dy > canvas.height - ball.radius) {
-            if (paddle.collision(ball)) {
-                dy = -dy;
-            } else {
-                lives--;
-                if (!lives) {
-                    lose_audio.play().then(r => console.log('player lose the game!'));
-                    gameOverText.drawStrokeText(ctx, "GAME OVER, BRO!");
-                    status = Actions.GAME_OVER;
-                } else {
-                    ball.x = canvas.width / 2;
-                    ball.y = canvas.height - 30;
-                    dx = 2;
-                    dy = -2;
-                    paddle.x = (canvas.width - paddle.width) / 2;
+        //detecto si la pelota rebota con las paredes izq, der o top.
+        if(!ball.checkWallsCollision(world.getCanvas())) {
+            //no toco ninguna de las paredes anteriores, detecto si toca la paleta o el fondo
+            if (ball.collisionBottom(world.getCanvas())){
+                //llego al fondo, pero reviso si rebota en la paleta
+                if (!ball.collisionPaddle(paddle)) {
+                    lives--;
+                    if (!lives) {
+                        showGameOver();
+                    } else {
+                        resetBall();
+                    }
                 }
             }
         }
 
         if (rightPressed) {
-            paddle.x = Math.min(paddle.x + 7, canvas.width - paddle.width);
+            paddle.x = Math.min(paddle.x + 7, world.getCanvas().width - paddle.width);
         } else if (leftPressed) {
             paddle.x = Math.max(paddle.x - 7, 0);
         }
-        ball.x += dx;
-        ball.y += dy;
         scoreText.drawText(ctx, `Score: ${score}`);
         livesText.drawText(ctx, `Lives: ${lives}`);
+        ball.updatePosition();
         raf = window.requestAnimationFrame(draw);
     }
 }
@@ -198,8 +194,8 @@ function keyUpHandler(e)
 
 function mouseMoveHandler(e) 
 {
-    const relativeX = e.clientX - canvas.offsetLeft;
-    if (relativeX > 0 && relativeX < canvas.width) {
+    const relativeX = e.clientX - world.getCanvas().offsetLeft;
+    if (relativeX > 0 && relativeX < world.getCanvas().width) {
       paddle.x = relativeX - paddle.width / 2;
     }
 }
@@ -228,19 +224,19 @@ function checkBricksCollisionDetection(ball)
 function updateGameStatus(event)
 {
     bricks.delete(event.detail.id);
-    dy = -dy;
+    ball.changeDy();
     score++;
     if(score % 5 === 0) {
-        dy = dy * 1.5;
-        dx = dx * 1.5;
+        ball.updateSpeed();
     }
     checkWinGame();
 }
 
 function onLoad() 
 {
-   ctx = canvas.getContext("2d");
-   canvas.addEventListener("collisionDetected", e => updateGameStatus(e));
+   world = new World('panel');
+   ctx = world.getContext2D();
+   world.createEventListener("collisionDetected", updateGameStatus);
    let btn = document.getElementById("runButton");
 
    btn.addEventListener("click", startGame);
@@ -248,7 +244,7 @@ function onLoad()
    document.addEventListener("keyup", keyUpHandler, false);
    //soporte para mouse
    document.addEventListener("mousemove", mouseMoveHandler, false);
-   createGameObjects(x, y);   
+   createGameObjects(world.getCanvas().width / 2, world.getCanvas().height - 30);
 }
 
 window.onLoad = onLoad();

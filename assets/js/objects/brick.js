@@ -77,10 +77,8 @@ export class Brick {
         let distancia = Math.sqrt( (cx - px)*(cx - px) + (cy - py)*(cy - py) );
         if (distancia < ball.radius)
         {
-            this._status = 0;
             const event = new CustomEvent('collisionDetected', {detail: {id: this._id}});
-            const canvas = document.getElementById('panel');
-            canvas.dispatchEvent(event);
+            document.dispatchEvent(event);
         }
     }
 
