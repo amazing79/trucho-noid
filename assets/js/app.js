@@ -118,7 +118,7 @@ function checkWinGame()
 
 function drawBricksObject(ctx)
 {
-    let gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height / 2);
+    let gradient = ctx.createLinearGradient(canvas.width/2, 0, canvas.width/2, canvas.height / 2);
     gradient.addColorStop(0, "#bdd4c3");
     gradient.addColorStop(.25, "#233d4a");
     gradient.addColorStop(.5, "#3bffec");
