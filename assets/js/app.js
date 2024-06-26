@@ -50,7 +50,13 @@ function createGameObjects(x, y)
 function createBallObject(x, y)
 {
   let point = new Point(x,y);
-  return new Ball(point, 10,"#0095DD" );
+  let ball = new Ball(point, 10,"#0095DD" );
+  ball.addEventListener("hitWall", logEvent);
+  return ball;
+}
+
+function logEvent(e) {
+    console.log("hit with: ", e.detail);
 }
 
 function createPaddleObject(x,y)

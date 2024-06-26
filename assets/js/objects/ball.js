@@ -1,5 +1,6 @@
-export class Ball {
+export class Ball extends EventTarget {
     constructor(aPoint, radius, aColor){
+        super();
         this._point = aPoint;
         this._radius = radius;
         this._color = aColor;
@@ -43,13 +44,19 @@ export class Ball {
        // ctx.closePath();
     }
 
+    _emitHitEvent(aWall) {
+        this.dispatchEvent( new CustomEvent("hitWall", { detail: aWall }));
+    }
+
     checkWallsCollision(world){
         if(this.collisionWalls(world)) {
             this.changeDX();
+            this._emitHitEvent("the wall");
             return true;
         }
         if(this.collisionTop()) {
             this.changeDy()
+            this._emitHitEvent("top");
             return true;
         }
     }
